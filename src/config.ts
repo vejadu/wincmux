@@ -78,3 +78,38 @@ export async function saveConfig(config: WinCMuxConfig): Promise<void> {
   if (!existsSync(dir)) await mkdir(dir, { recursive: true });
   await writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
 }
+
+const DEFAULT_CONFIG_FILE = {
+  _comment: 'WinCMux configuration. Edit and restart wincmux to apply changes.',
+  githubToken: '',
+  picovoiceAccessKey: '',
+  azureSpeechKey: '',
+  azureSpeechRegion: 'eastus',
+  teams: {
+    tenantId: '',
+    clientId: '',
+  },
+  notificationPollIntervalMs: 30000,
+  sessionMonitorIntervalMs: 2000,
+  maxPanes: 9,
+  wakeWord: 'computer',
+};
+
+export async function initConfig(): Promise<WinCMuxConfig> {
+  if (existsSync(CONFIG_PATH)) {
+    return loadConfig();
+  }
+  const dir = join(homedir(), '.wincmux');
+  await mkdir(dir, { recursive: true });
+  await writeFile(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG_FILE, null, 2), 'utf-8');
+  console.log('✨ Created ~/.wincmux/config.json — fill in your tokens and restart.');
+  return { ...DEFAULTS };
+}
+
+export function validateConfig(config: WinCMuxConfig): string[] {
+  const warnings: string[] = [];
+  if (!config.githubToken) warnings.push('githubToken not set — GitHub notifications disabled');
+  if (!config.picovoiceAccessKey) warnings.push('picovoiceAccessKey not set — voice control disabled');
+  if (!config.azureSpeechKey) warnings.push('azureSpeechKey not set — speech-to-text disabled');
+  return warnings;
+}

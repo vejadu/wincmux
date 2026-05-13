@@ -17,45 +17,58 @@ WinCMux multiplexes multiple Copilot coding agent sessions across Windows Termin
 
 ---
 
-## Install & Run
+## Usage
 
 ```sh
 npx @vejadu/wincmux
 ```
 
+Launches WinCMux with the TUI dashboard. On first run, creates `~/.wincmux/config.json` with defaults — fill in your tokens and restart.
+
+```sh
+npx @vejadu/wincmux --issues
+```
+
+Auto-spawns one Windows Terminal pane per open GitHub issue labelled `squad` (up to 9), then opens the dashboard. Requires `gh` CLI authenticated.
+
 Or install globally:
 
 ```sh
 npm install -g @vejadu/wincmux
-wincmux
+wincmux [--issues]
 ```
 
 ---
 
 ## Configuration
 
-WinCMux reads `~/.wincmux/config.json` on startup. Example:
+WinCMux reads `~/.wincmux/config.json` on startup, creating it with defaults on first run. Fill in the fields you need and restart:
 
 ```json
 {
-  "sessions": [
-    { "issue": 42, "label": "auth-fix" },
-    { "issue": 17, "label": "ui-refactor" }
-  ],
-  "github": {
-    "token": "ghp_..."
-  },
-  "voice": {
-    "picovoiceAccessKey": "...",
-    "azureSpeechKey": "...",
-    "azureSpeechRegion": "eastus"
-  },
-  "teams": {
-    "tenantId": "...",
-    "clientId": "..."
-  }
+  "_comment": "WinCMux configuration. Edit and restart wincmux to apply changes.",
+  "githubToken": "ghp_...",
+  "picovoiceAccessKey": "...",
+  "azureSpeechKey": "...",
+  "azureSpeechRegion": "eastus",
+  "teams": { "tenantId": "...", "clientId": "..." },
+  "notificationPollIntervalMs": 30000,
+  "sessionMonitorIntervalMs": 2000,
+  "maxPanes": 9,
+  "wakeWord": "computer"
 }
 ```
+
+| Field | Description |
+|---|---|
+| `githubToken` | Personal access token for GitHub notification polling. Falls back to `GITHUB_TOKEN` env var. |
+| `picovoiceAccessKey` | Porcupine wake-word key (free at console.picovoice.ai). Omit to disable voice. |
+| `azureSpeechKey` / `azureSpeechRegion` | Azure Cognitive Services for speech-to-text. |
+| `teams.tenantId` / `teams.clientId` | Azure AD app for Teams change notifications. |
+| `notificationPollIntervalMs` | How often to poll GitHub (ms). Default: 30000. |
+| `sessionMonitorIntervalMs` | How often to sample PTY buffer for status detection (ms). Default: 2000. |
+| `maxPanes` | Maximum number of concurrent panes. Default: 9. |
+| `wakeWord` | Wake-word phrase passed to Porcupine. Default: `"computer"`. |
 
 ---
 
