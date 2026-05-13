@@ -1,6 +1,5 @@
 // integrations/email-agent.ts — hook for squad email-watcher agents → feed alerts
-// TODO: Expose an HTTP endpoint or IPC channel that squad email-watcher agents
-//       can POST to, surfacing alerts in the WinCMux notification feed.
+// Phase 3 placeholder: real HTTP IPC integration is deferred.
 
 import type { FeedItem } from '../notification-feed.js';
 
@@ -13,14 +12,14 @@ export interface EmailAgentFeedOptions {
 export class EmailAgentFeed {
   constructor(private readonly options: EmailAgentFeedOptions) {}
 
-  // TODO: start(): Promise<void> — open HTTP listener for agent payloads
-  // TODO: stop(): void — close listener
-
   async start(): Promise<void> {
-    throw new Error('EmailAgentFeed.start not yet implemented');
+    console.log(
+      'Email agent integration not yet implemented — extend this class to add email monitoring',
+    );
+    void this.options; // referenced to satisfy strict checks; wired up in Phase 3
   }
 
   stop(): void {
-    // TODO: close HTTP server
+    // No-op until Phase 3 HTTP listener is implemented
   }
 }
