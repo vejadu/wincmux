@@ -1,29 +1,97 @@
-// tui/voice-overlay.tsx — mic active / wake word detected indicator
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 
-interface VoiceOverlayProps {
-  listening?: boolean;
-  wakeWordDetected?: boolean;
-  transcript?: string;
-}
+type VoiceState =
+  | 'disabled'
+  | 'sleeping'
+  | 'wake-word-heard'
+  | 'listening'
+  | 'transcribing'
+  | 'processing';
 
-// TODO: Animate mic icon while listening
-// TODO: Show transcript as it streams in from STT
+type VoiceOverlayProps = {
+  voiceState: VoiceState;
+};
 
-export function VoiceOverlay({
-  listening = false,
-  wakeWordDetected = false,
-  transcript,
-}: VoiceOverlayProps): React.ReactElement | null {
-  if (!listening && !wakeWordDetected) return null;
+const DOT_FRAMES = ['', '.', '..', '...'];
+
+export function VoiceOverlay({ voiceState }: VoiceOverlayProps) {
+  const [dotIndex, setDotIndex] = useState(0);
+
+  const animated = voiceState === 'listening' || voiceState === 'transcribing';
+
+  useEffect(() => {
+    if (!animated) {
+      setDotIndex(0);
+      return;
+    }
+    const t = setInterval(() => {
+      setDotIndex(i => (i + 1) % DOT_FRAMES.length);
+    }, 100);
+    return () => clearInterval(t);
+  }, [animated]);
+
+  if (voiceState === 'disabled') return null;
+
+  const dots = DOT_FRAMES[dotIndex] ?? '';
+
+  type StateConfig = {
+    icon: string;
+    label: string;
+    color: string;
+    bold: boolean;
+    dimColor: boolean;
+  };
+
+  const config: Record<Exclude<VoiceState, 'disabled'>, StateConfig> = {
+    sleeping: {
+      icon: '◦',
+      label: 'voice: ready',
+      color: 'gray',
+      bold: false,
+      dimColor: true,
+    },
+    'wake-word-heard': {
+      icon: '◉',
+      label: 'wake word heard — speak now',
+      color: 'yellow',
+      bold: true,
+      dimColor: false,
+    },
+    listening: {
+      icon: '◉',
+      label: `listening${dots}`,
+      color: 'green',
+      bold: true,
+      dimColor: false,
+    },
+    transcribing: {
+      icon: '◎',
+      label: `transcribing${dots}`,
+      color: 'cyan',
+      bold: false,
+      dimColor: false,
+    },
+    processing: {
+      icon: '◈',
+      label: 'processing command',
+      color: 'magenta',
+      bold: false,
+      dimColor: false,
+    },
+  };
+
+  const state = config[voiceState as Exclude<VoiceState, 'disabled'>];
+  if (!state) return null;
 
   return (
-    <Box borderStyle="single" borderColor="yellow" paddingX={1}>
-      <Text color="yellow">
-        {wakeWordDetected ? '🎙 Listening...' : '🔇 Wake word: "Hey WinCMux"'}
+    <Box paddingX={1} flexDirection="row" gap={1}>
+      <Text color={state.color} bold={state.bold} dimColor={state.dimColor}>
+        {state.icon}
       </Text>
-      {transcript && <Text> {transcript}</Text>}
+      <Text color={state.color} bold={state.bold} dimColor={state.dimColor}>
+        {state.label}
+      </Text>
     </Box>
   );
 }

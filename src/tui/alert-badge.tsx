@@ -1,29 +1,49 @@
-// tui/alert-badge.tsx — flash/badge for Teams/email pane alerts
-import React, { useEffect, useState } from 'react';
-import { Text } from 'ink';
+import React, { useState, useEffect } from 'react';
+import { Box, Text } from 'ink';
 
-interface AlertBadgeProps {
-  count?: number;
-  /** Flash the badge to draw attention */
-  flash?: boolean;
-}
+type NotifSource = 'github' | 'teams' | 'email';
 
-// TODO: Implement timed flash animation using useInterval
-// TODO: Integrate with TeamsMonitor and EmailAgentFeed events
+type AlertBadgeProps = {
+  active: boolean;
+  label: string;
+  source: NotifSource;
+};
 
-export function AlertBadge({ count = 0, flash = false }: AlertBadgeProps): React.ReactElement | null {
-  const [visible, setVisible] = useState(true);
+const SOURCE_COLORS_A: Record<NotifSource, string> = {
+  github: 'blue',
+  teams: 'magenta',
+  email: 'yellow',
+};
+
+const SOURCE_COLORS_B: Record<NotifSource, string> = {
+  github: 'cyan',
+  teams: 'white',
+  email: 'white',
+};
+
+export function AlertBadge({ active, label, source }: AlertBadgeProps) {
+  const [flashOn, setFlashOn] = useState(true);
 
   useEffect(() => {
-    if (!flash) return;
-    // TODO: toggle visible on a 500ms interval to create flash effect
-  }, [flash]);
+    if (!active) {
+      setFlashOn(true);
+      return;
+    }
+    const t = setInterval(() => {
+      setFlashOn(f => !f);
+    }, 500);
+    return () => clearInterval(t);
+  }, [active]);
 
-  if (count === 0) return null;
+  if (!active) return null;
+
+  const color = flashOn ? SOURCE_COLORS_A[source] : SOURCE_COLORS_B[source];
 
   return (
-    <Text backgroundColor="red" color="white" bold>
-      {visible ? ` ${count} ` : '   '}
-    </Text>
+    <Box>
+      <Text color={color} bold>
+        ▲ {label}
+      </Text>
+    </Box>
   );
 }
