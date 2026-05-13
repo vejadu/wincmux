@@ -170,11 +170,18 @@ export function Dashboard({
     return () => clearInterval(t);
   }, [flashSessions]);
 
+  const gridWidth = Math.floor(termWidth * 0.7);
+  const feedWidth = termWidth - gridWidth;
+  const mainHeight = termHeight - 3;
+
+  const activeSessions = sessions.filter(s => s.status !== 'closed');
+
   useInput((input, key) => {
     if (key.ctrl) {
       const digit = parseInt(input, 10);
       if (!isNaN(digit) && digit >= 1 && digit <= 9) {
-        onFocusSession(digit);
+        const pane = activeSessions[digit - 1];
+        if (pane) onFocusSession(pane.id);
         return;
       }
       if (input === 'n' || input === 'N') {
@@ -187,12 +194,6 @@ export function Dashboard({
       }
     }
   });
-
-  const gridWidth = Math.floor(termWidth * 0.7);
-  const feedWidth = termWidth - gridWidth;
-  const mainHeight = termHeight - 3;
-
-  const activeSessions = sessions.filter(s => s.status !== 'closed');
 
   const unreadCounts: Record<NotifSource, number> = { github: 0, teams: 0, email: 0 };
   for (const n of notifications) {
