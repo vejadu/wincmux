@@ -1,10 +1,10 @@
 // integrations/email-agent.ts — hook for squad email-watcher agents → feed alerts
 // Phase 3 placeholder: real HTTP IPC integration is deferred.
 
-import type { FeedItem } from '../notification-feed.js';
+import type { Notification } from '../types.js';
 
 export interface EmailAgentFeedOptions {
-  onItem: (item: FeedItem) => void;
+  onItem: (item: Notification) => void;
   /** Port to listen on for incoming agent POST requests, default 52731 */
   port?: number;
 }

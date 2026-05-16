@@ -1,36 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import { FeedPanel } from './feed-panel.js';
 import { VoiceOverlay } from './voice-overlay.js';
 import { AlertBadge } from './alert-badge.js';
-
-type SessionStatus = 'idle' | 'working' | 'waiting' | 'error' | 'closed';
-
-type Session = {
-  id: number;
-  paneIndex: number;
-  issueNumber?: number;
-  repo?: string;
-  status: SessionStatus;
-  lastActivity: Date;
-  title?: string;
-};
-
-type NotifSource = 'github' | 'teams' | 'email';
-type NotifPriority = 'high' | 'normal';
-
-type Notification = {
-  id: string;
-  source: NotifSource;
-  title: string;
-  body: string;
-  timestamp: Date;
-  priority: NotifPriority;
-  read: boolean;
-  sessionId?: number;
-};
-
-type VoiceState = 'disabled' | 'sleeping' | 'wake-word-heard' | 'listening' | 'transcribing' | 'processing';
+import type { Session, SessionStatus, Notification, NotifSource, VoiceState } from '../types.js';
 
 type DashboardProps = {
   sessions: Session[];

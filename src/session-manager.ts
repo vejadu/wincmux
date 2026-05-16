@@ -5,24 +5,18 @@ import type { IPty } from 'node-pty';
 import { spawnPane, closePane, writeToPane } from './launcher.js';
 import type { WinCMuxConfig } from './config.js';
 import type { LaunchConfig } from './launcher.js';
+import type { Session, SessionStatus } from './types.js';
 
-export type SessionStatus = 'idle' | 'working' | 'waiting' | 'error' | 'closed';
+export type { Session, SessionStatus };
 
-export type Session = {
-  id: number;
-  paneIndex: number;
-  issueNumber?: number;
-  repo?: string;
-  status: SessionStatus;
-  lastActivity: Date;
-  title?: string;
+type InternalSession = Session & {
   pty?: IPty;
   vtBuffer?: Terminal;
   _monitorInterval?: ReturnType<typeof setInterval>;
 };
 
 export class SessionManager {
-  private sessions: Map<number, Session>;
+  private sessions: Map<number, InternalSession>;
   private nextId: number;
   private listeners: Set<(sessions: Session[]) => void>;
   private config: WinCMuxConfig;
@@ -48,7 +42,7 @@ export class SessionManager {
     const spawned = await spawnPane(launchConfig, paneIndex, options);
     const vtBuffer = new Terminal({ cols: 220, rows: 50 });
 
-    const session: Session = {
+    const session: InternalSession = {
       id,
       paneIndex,
       issueNumber: options?.issueNumber,
@@ -78,6 +72,7 @@ export class SessionManager {
       closePane(session.pty);
     }
     session.status = 'closed';
+    this.sessions.delete(id);
     this.notifyListeners();
   }
 
@@ -116,7 +111,7 @@ export class SessionManager {
     }
   }
 
-  private monitorPtyOutput(session: Session): void {
+  private monitorPtyOutput(session: InternalSession): void {
     let lastStatus = session.status;
     session._monitorInterval = setInterval(() => {
       if (!session.vtBuffer) return;
@@ -127,7 +122,7 @@ export class SessionManager {
         lastStatus = status;
         this.notifyListeners();
       }
-    }, 2000);
+    }, this.config.sessionMonitorIntervalMs);
   }
 
   private detectStatus(vtBuffer: Terminal): SessionStatus {

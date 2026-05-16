@@ -3,54 +3,37 @@ import { join } from 'node:path';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
-export type LaunchConfig = {
-  count: number;
-  command: string;
-  args: string[];
-  cwd?: string;
-};
-
 export type WinCMuxConfig = {
-  // Session defaults
-  defaultSessionCount: number;    // default: 2
-  launchConfig: LaunchConfig;
-
   // GitHub notification polling
-  githubToken?: string;           // GITHUB_TOKEN env fallback
-  githubPollIntervalMs: number;   // default: 30000
-  watchedRepos: string[];         // ['owner/repo', ...]
+  githubToken?: string;                  // GITHUB_TOKEN env fallback
+  notificationPollIntervalMs: number;    // default: 30000
+
+  // Session monitoring
+  sessionMonitorIntervalMs: number;      // default: 2000
+  maxPanes: number;                      // default: 9
 
   // Voice
-  voiceEnabled: boolean;          // default: false
-  picovoiceAccessKey?: string;    // PICOVOICE_ACCESS_KEY env fallback
-  azureSpeechKey?: string;        // AZURE_SPEECH_KEY env fallback
-  azureSpeechRegion?: string;     // default: 'eastus'
-  wakePhrase: string;             // default: 'COMPUTER'
+  picovoiceAccessKey?: string;           // PICOVOICE_ACCESS_KEY env fallback
+  azureSpeechKey?: string;               // AZURE_SPEECH_KEY env fallback
+  azureSpeechRegion: string;             // default: 'eastus'
+  wakeWord: string;                      // default: 'computer'
 
   // Teams (optional)
-  teamsEnabled: boolean;          // default: false
-  teamsTenantId?: string;
-  teamsClientId?: string;
-
-  // Notifications
-  toastEnabled: boolean;          // default: true
+  teams: {
+    tenantId?: string;
+    clientId?: string;
+  };
 };
 
 const CONFIG_PATH = join(homedir(), '.wincmux', 'config.json');
 
 const DEFAULTS: WinCMuxConfig = {
-  defaultSessionCount: 2,
-  launchConfig: {
-    count: 2,
-    command: 'powershell.exe',
-    args: ['-NoLogo'],
-  },
-  githubPollIntervalMs: 30_000,
-  watchedRepos: [],
-  voiceEnabled: false,
-  wakePhrase: 'COMPUTER',
-  teamsEnabled: false,
-  toastEnabled: true,
+  notificationPollIntervalMs: 30_000,
+  sessionMonitorIntervalMs: 2_000,
+  maxPanes: 9,
+  azureSpeechRegion: 'eastus',
+  wakeWord: 'computer',
+  teams: {},
 };
 
 export async function loadConfig(): Promise<WinCMuxConfig> {
@@ -58,7 +41,7 @@ export async function loadConfig(): Promise<WinCMuxConfig> {
   if (existsSync(CONFIG_PATH)) {
     try {
       const raw = await readFile(CONFIG_PATH, 'utf-8');
-      fileConfig = JSON.parse(raw);
+      fileConfig = JSON.parse(raw) as Partial<WinCMuxConfig>;
     } catch {
       // Invalid JSON — ignore, use defaults
     }
@@ -70,13 +53,13 @@ export async function loadConfig(): Promise<WinCMuxConfig> {
   if (process.env.AZURE_SPEECH_KEY) envOverrides.azureSpeechKey = process.env.AZURE_SPEECH_KEY;
   if (process.env.AZURE_SPEECH_REGION) envOverrides.azureSpeechRegion = process.env.AZURE_SPEECH_REGION;
 
-  return { ...DEFAULTS, ...fileConfig, ...envOverrides };
-}
-
-export async function saveConfig(config: WinCMuxConfig): Promise<void> {
-  const dir = join(homedir(), '.wincmux');
-  if (!existsSync(dir)) await mkdir(dir, { recursive: true });
-  await writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+  return {
+    ...DEFAULTS,
+    ...fileConfig,
+    // Merge teams sub-object instead of overwriting
+    teams: { ...DEFAULTS.teams, ...(fileConfig.teams ?? {}) },
+    ...envOverrides,
+  };
 }
 
 const DEFAULT_CONFIG_FILE = {
@@ -89,8 +72,8 @@ const DEFAULT_CONFIG_FILE = {
     tenantId: '',
     clientId: '',
   },
-  notificationPollIntervalMs: 30000,
-  sessionMonitorIntervalMs: 2000,
+  notificationPollIntervalMs: 30_000,
+  sessionMonitorIntervalMs: 2_000,
   maxPanes: 9,
   wakeWord: 'computer',
 };
