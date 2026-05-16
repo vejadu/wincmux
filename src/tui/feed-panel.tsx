@@ -1,19 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-
-type NotifSource = 'github' | 'teams' | 'email';
-type NotifPriority = 'high' | 'normal';
-
-type Notification = {
-  id: string;
-  source: NotifSource;
-  title: string;
-  body: string;
-  timestamp: Date;
-  priority: NotifPriority;
-  read: boolean;
-  sessionId?: number;
-};
+import type { Notification, NotifSource } from '../types.js';
 
 type FeedPanelProps = {
   notifications: Notification[];

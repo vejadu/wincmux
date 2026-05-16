@@ -2,8 +2,10 @@
 
 export interface WakeWordListenerOptions {
   accessKey: string;
-  /** Path to custom .ppn model. Falls back to built-in "jarvis" keyword. */
+  /** Path to custom .ppn model. Takes precedence over wakeWord. */
   keywordPath?: string;
+  /** Built-in wake word name (e.g. 'computer', 'jarvis'). Defaults to 'computer'. */
+  wakeWord?: string;
   onWakeWord: () => void;
 }
 
@@ -58,7 +60,7 @@ export class WakeWordListener {
 
     const keywords = this.options.keywordPath
       ? [this.options.keywordPath]
-      : [BuiltinKeyword.JARVIS];
+      : [this.resolveBuiltinKeyword(BuiltinKeyword)];
     const sensitivities = keywords.map(() => 0.5);
 
     const engine: PorcupineEngine = new Porcupine(
@@ -75,6 +77,11 @@ export class WakeWordListener {
     this.running = true;
 
     void this.#readLoop();
+  }
+
+  private resolveBuiltinKeyword(BuiltinKeyword: Record<string, string>): string {
+    const key = (this.options.wakeWord ?? 'computer').toUpperCase();
+    return BuiltinKeyword[key] ?? BuiltinKeyword['COMPUTER'];
   }
 
   async #readLoop(): Promise<void> {

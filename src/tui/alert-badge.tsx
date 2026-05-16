@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
-
-type NotifSource = 'github' | 'teams' | 'email';
+import type { NotifSource } from '../types.js';
 
 type AlertBadgeProps = {
   active: boolean;

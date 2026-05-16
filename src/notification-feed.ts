@@ -1,24 +1,9 @@
 import { Octokit } from '@octokit/rest';
 import { execa } from 'execa';
 import type { WinCMuxConfig } from './config.js';
+import type { Notification, NotifSource, NotifPriority } from './types.js';
 
-export type NotifSource = 'github' | 'teams' | 'email';
-export type NotifPriority = 'high' | 'normal';
-
-export type Notification = {
-  id: string;
-  source: NotifSource;
-  title: string;
-  body: string;
-  timestamp: Date;
-  priority: NotifPriority;
-  read: boolean;
-  sessionId?: number;
-  url?: string;
-};
-
-/** @deprecated Use Notification */
-export type FeedItem = Notification;
+export type { Notification, NotifSource, NotifPriority };
 
 export class NotificationFeed {
   private config: WinCMuxConfig;
@@ -37,7 +22,7 @@ export class NotificationFeed {
 
   start(): void {
     this.poll(); // immediate first poll
-    this.pollHandle = setInterval(() => this.poll(), this.config.githubPollIntervalMs);
+    this.pollHandle = setInterval(() => this.poll(), this.config.notificationPollIntervalMs);
   }
 
   stop(): void {

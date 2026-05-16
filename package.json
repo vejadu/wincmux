@@ -12,28 +12,34 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "ink": "^5.0.0",
-    "react": "^18.0.0",
-    "node-pty": "^1.1.0",
-    "@xterm/headless": "latest",
     "@octokit/rest": "^21.0.0",
+    "@xterm/headless": "latest",
+    "conf": "^13.0.0",
     "execa": "^9.0.0",
-    "conf": "^13.0.0"
+    "ink": "^5.0.0",
+    "node-pty": "^1.1.0",
+    "react": "^18.0.0"
   },
   "optionalDependencies": {
+    "@azure/msal-node": "^2.0.0",
+    "@microsoft/microsoft-graph-client": "^3.0.0",
     "@picovoice/porcupine-node": "^3.0.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.43.0",
-    "@microsoft/microsoft-graph-client": "^3.0.0",
-    "@azure/msal-node": "^2.0.0",
     "node-toasted-notifier": "^9.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "tsx": "^4.0.0",
+    "@types/node": "^22.0.0",
     "@types/react": "^18.0.0",
-    "@types/node": "^22.0.0"
+    "@vitest/coverage-v8": "^4.1.6",
+    "eslint": "^9.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.6"
   }
 }
