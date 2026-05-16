@@ -60,7 +60,7 @@ export class WakeWordListener {
 
     const keywords = this.options.keywordPath
       ? [this.options.keywordPath]
-      : [(BuiltinKeyword as Record<string, string>)[(this.options.wakeWord ?? 'computer').toUpperCase()] ?? BuiltinKeyword.COMPUTER];
+      : [this.resolveBuiltinKeyword(BuiltinKeyword)];
     const sensitivities = keywords.map(() => 0.5);
 
     const engine: PorcupineEngine = new Porcupine(
@@ -77,6 +77,11 @@ export class WakeWordListener {
     this.running = true;
 
     void this.#readLoop();
+  }
+
+  private resolveBuiltinKeyword(BuiltinKeyword: Record<string, string>): string {
+    const key = (this.options.wakeWord ?? 'computer').toUpperCase();
+    return BuiltinKeyword[key] ?? BuiltinKeyword['COMPUTER'];
   }
 
   async #readLoop(): Promise<void> {

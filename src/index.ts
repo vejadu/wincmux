@@ -11,6 +11,12 @@ import type { WakeWordListener } from './voice/wake-word.js';
 import type { SpeechTranscriber } from './voice/stt.js';
 import type { TeamsMonitor } from './integrations/teams.js';
 
+/** Generate a stable unique notification ID from a source prefix. */
+let _idSeq = 0;
+function makeNotifId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${++_idSeq}`;
+}
+
 async function main() {
   const config = await initConfig();
   const warnings = validateConfig(config);
@@ -37,7 +43,8 @@ async function main() {
   }
 
   function App() {
-    // Seed initial sessions so pre-render spawns are visible immediately
+    // sessionManager is created synchronously before render(), so getSessions() is
+    // stable here — any pre-render spawns (e.g. --issues) are already in the map.
     const [sessions, setSessions] = useState<Session[]>(() => sessionManager.getSessions());
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [voiceState, setVoiceState] = useState<VoiceState>('disabled');
@@ -152,7 +159,7 @@ async function main() {
             pollIntervalMs: config.notificationPollIntervalMs,
             onAlert: message => {
               feed.addExternalNotification({
-                id: `teams-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                id: makeNotifId('teams'),
                 source: 'teams',
                 title: message,
                 body: '',
